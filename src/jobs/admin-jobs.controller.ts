@@ -8,29 +8,35 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiOperation, ApiPropertyOptional, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { IsObject, IsOptional } from 'class-validator';
 import { AdminKeyGuard } from '../common/auth/admin-key.guard';
 import { ResponseMessage } from '../common/http/response-message.decorator';
 import { JobsRegistry } from './jobs.registry';
 
 export class TriggerJobDto {
+  @ApiPropertyOptional({ type: 'object', additionalProperties: true, description: 'Job payload' })
   @IsOptional()
   @IsObject()
   payload?: Record<string, unknown>;
 }
 
+@ApiTags('admin')
+@ApiSecurity('admin-key')
 @Controller('admin/jobs')
 @UseGuards(AdminKeyGuard)
 export class AdminJobsController {
   constructor(private readonly registry: JobsRegistry) {}
 
   @Get()
+  @ApiOperation({ summary: 'List registered background workers and their schedules' })
   @ResponseMessage('Registered jobs retrieved')
   list() {
     return this.registry.list();
   }
 
   @Post(':name/trigger')
+  @ApiOperation({ summary: 'Enqueue a one-off run of a worker (e.g. fx-refresh, reconciler)' })
   @HttpCode(HttpStatus.ACCEPTED)
   @ResponseMessage('Job enqueued')
   async trigger(@Param('name') name: string, @Body() body: TriggerJobDto) {

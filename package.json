@@ -20,7 +20,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "openapi:export": "ts-node --transpile-only scripts/export-openapi.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11",

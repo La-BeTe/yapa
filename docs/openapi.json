@@ -1,0 +1,871 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/v1/admin/jobs": {
+      "get": {
+        "operationId": "AdminJobsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "admin-key": []
+          }
+        ],
+        "summary": "List registered background workers and their schedules",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/jobs/{name}/trigger": {
+      "post": {
+        "operationId": "AdminJobsController_trigger",
+        "parameters": [
+          {
+            "name": "name",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TriggerJobDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "admin-key": []
+          }
+        ],
+        "summary": "Enqueue a one-off run of a worker (e.g. fx-refresh, reconciler)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/fx-rates": {
+      "get": {
+        "description": "source is live (provider), static (pair pinned by an admin) or fallback (provider unavailable, last stored rate). refreshed_at is when that rate was last refreshed.",
+        "operationId": "FxRatesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "FX rates retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "success",
+                    "message": "FX rates retrieved",
+                    "data": [
+                      {
+                        "base_currency": "USDx",
+                        "quote_currency": "cNGN",
+                        "mid_rate": "1500",
+                        "spread_bps": 50,
+                        "effective_rate": "1492.5",
+                        "source": "live",
+                        "refreshed_at": "2026-10-30T12:00:00.000Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "FX_RATE_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "error",
+                    "message": "FX rates are currently unavailable",
+                    "data": {
+                      "code": "FX_RATE_UNAVAILABLE"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Current conversion rates between all supported stablecoins",
+        "tags": [
+          "fx-rates"
+        ]
+      }
+    },
+    "/v1/admin/fx-rates": {
+      "get": {
+        "operationId": "AdminFxRatesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "admin-key": []
+          }
+        ],
+        "summary": "List stored (static / fallback) rates and per-pair configuration",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/fx-rates/{base}/{quote}": {
+      "patch": {
+        "operationId": "AdminFxRatesController_update",
+        "parameters": [
+          {
+            "name": "base",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cNGN",
+                "cGHS",
+                "cXAF",
+                "USDx",
+                "EURx"
+              ]
+            }
+          },
+          {
+            "name": "quote",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cNGN",
+                "cGHS",
+                "cXAF",
+                "USDx",
+                "EURx"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFxRateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "admin-key": []
+          }
+        ],
+        "summary": "Set the static rate, spread or prefer_static flag of a pair",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/wallets": {
+      "post": {
+        "operationId": "WalletsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWalletDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Wallet created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "success",
+                    "message": "Wallet created",
+                    "data": {
+                      "id": "01JBWALLETALICE0000000000A",
+                      "email": "ada@example.com",
+                      "phone": "+2348031234567",
+                      "status": "ACTIVE",
+                      "created_at": "2026-10-30T12:00:00.000Z",
+                      "updated_at": "2026-10-30T12:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "error",
+                    "message": "Provide an email address or a phone number",
+                    "data": {
+                      "code": "VALIDATION_ERROR"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "WALLET_ALREADY_EXISTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "error",
+                    "message": "A wallet with this email or phone number already exists",
+                    "data": {
+                      "code": "WALLET_ALREADY_EXISTS"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a wallet identified by a unique email and/or phone number",
+        "tags": [
+          "wallets"
+        ]
+      }
+    },
+    "/v1/wallets/{id}": {
+      "get": {
+        "description": "total_usd is valued at mid rates (no spread) and is null when no FX rate is available.",
+        "operationId": "WalletsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wallet retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "success",
+                    "message": "Wallet retrieved",
+                    "data": {
+                      "id": "01JBWALLETALICE0000000000A",
+                      "email": "ada@example.com",
+                      "phone": "+2348031234567",
+                      "status": "ACTIVE",
+                      "created_at": "2026-10-30T12:00:00.000Z",
+                      "updated_at": "2026-10-30T12:00:00.000Z",
+                      "balances": [
+                        {
+                          "currency": "cNGN",
+                          "amount": "750000",
+                          "scale": 2
+                        },
+                        {
+                          "currency": "cGHS",
+                          "amount": "0",
+                          "scale": 2
+                        },
+                        {
+                          "currency": "cXAF",
+                          "amount": "0",
+                          "scale": 0
+                        },
+                        {
+                          "currency": "USDx",
+                          "amount": "98",
+                          "scale": 2
+                        },
+                        {
+                          "currency": "EURx",
+                          "amount": "0",
+                          "scale": 2
+                        }
+                      ],
+                      "total_usd": {
+                        "currency": "USDx",
+                        "amount": "598",
+                        "scale": 2
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "WALLET_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "error",
+                    "message": "Wallet 01J... was not found",
+                    "data": {
+                      "code": "WALLET_NOT_FOUND"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get a wallet with its balance per currency and total value in USD",
+        "tags": [
+          "wallets"
+        ]
+      }
+    },
+    "/v1/transactions": {
+      "post": {
+        "description": "Required fields by type:\n- DEPOSIT: destination_wallet_id, currency\n- SWAP: source_wallet_id, source_currency, destination_currency\n- TRANSFER: source_wallet_id, destination_wallet_id, source_currency, destination_currency (defaults to source_currency)\n\nIdempotent on unique_reference: retrying the same request returns the original status and body\nwithout moving money again. A failed transaction (e.g. insufficient funds) is final; use a new\nunique_reference to try again.",
+        "operationId": "TransactionsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransactionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transaction completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "success",
+                    "message": "Transaction completed",
+                    "data": {
+                      "id": "01JBTXN0000000000000000001",
+                      "type": "TRANSFER",
+                      "status": "COMPLETED",
+                      "unique_reference": "order-7f3a9c",
+                      "source": {
+                        "wallet_id": "01JBWALLETALICE0000000000A",
+                        "amount": "400",
+                        "currency": "USDx",
+                        "scale": 2
+                      },
+                      "destination": {
+                        "wallet_id": "01JBWALLETBOB000000000000B",
+                        "amount": "4975",
+                        "currency": "cGHS",
+                        "scale": 2
+                      },
+                      "fx": {
+                        "mid_rate": "12.5",
+                        "effective_rate": "12.4375",
+                        "spread_bps": 50,
+                        "fee_amount": "25",
+                        "rate_source": "live",
+                        "rate_refreshed_at": "2026-10-30T12:00:00.000Z"
+                      },
+                      "failure": null,
+                      "created_at": "2026-10-30T12:00:00.000Z",
+                      "completed_at": "2026-10-30T12:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "error",
+                    "message": "destination_currency is required for SWAP",
+                    "data": {
+                      "code": "VALIDATION_ERROR"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "WALLET_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "error",
+                    "message": "Wallet 01J... was not found",
+                    "data": {
+                      "code": "WALLET_NOT_FOUND"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "TRANSACTION_IN_PROGRESS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "error",
+                    "message": "A request with this unique_reference is still being processed",
+                    "data": {
+                      "code": "TRANSACTION_IN_PROGRESS"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INSUFFICIENT_FUNDS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "error",
+                    "message": "Insufficient USDx balance",
+                    "data": {
+                      "code": "INSUFFICIENT_FUNDS"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "FX_RATE_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "error",
+                    "message": "No FX rate is available for USDx/cGHS",
+                    "data": {
+                      "code": "FX_RATE_UNAVAILABLE"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Deposit, swap or transfer funds",
+        "tags": [
+          "transactions"
+        ]
+      }
+    },
+    "/v1/transactions/{id}": {
+      "get": {
+        "operationId": "TransactionsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "success",
+                    "message": "Transaction retrieved",
+                    "data": {
+                      "id": "01JBTXN0000000000000000001",
+                      "type": "TRANSFER",
+                      "status": "COMPLETED",
+                      "unique_reference": "order-7f3a9c",
+                      "source": {
+                        "wallet_id": "01JBWALLETALICE0000000000A",
+                        "amount": "400",
+                        "currency": "USDx",
+                        "scale": 2
+                      },
+                      "destination": {
+                        "wallet_id": "01JBWALLETBOB000000000000B",
+                        "amount": "4975",
+                        "currency": "cGHS",
+                        "scale": 2
+                      },
+                      "fx": {
+                        "mid_rate": "12.5",
+                        "effective_rate": "12.4375",
+                        "spread_bps": 50,
+                        "fee_amount": "25",
+                        "rate_source": "live",
+                        "rate_refreshed_at": "2026-10-30T12:00:00.000Z"
+                      },
+                      "failure": null,
+                      "created_at": "2026-10-30T12:00:00.000Z",
+                      "completed_at": "2026-10-30T12:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "TRANSACTION_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "error",
+                    "message": "Transaction 01J... was not found",
+                    "data": {
+                      "code": "TRANSACTION_NOT_FOUND"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get a transaction by id",
+        "tags": [
+          "transactions"
+        ]
+      }
+    },
+    "/v1/wallets/{id}/transactions": {
+      "get": {
+        "description": "Includes deposits, swaps and transfers sent and received. Filter by type and by currency (either side). Pass next_cursor as cursor to get the next page.",
+        "operationId": "WalletTransactionsController_list",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DEPOSIT",
+                "SWAP",
+                "TRANSFER"
+              ]
+            }
+          },
+          {
+            "name": "currency",
+            "required": false,
+            "in": "query",
+            "description": "Matches the source or destination currency",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cNGN",
+                "cGHS",
+                "cXAF",
+                "USDx",
+                "EURx"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "next_cursor from the previous page",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transactions retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "success",
+                    "message": "Transactions retrieved",
+                    "data": {
+                      "items": [
+                        {
+                          "id": "01JBTXN0000000000000000001",
+                          "type": "TRANSFER",
+                          "status": "COMPLETED",
+                          "unique_reference": "order-7f3a9c",
+                          "source": {
+                            "wallet_id": "01JBWALLETALICE0000000000A",
+                            "amount": "400",
+                            "currency": "USDx",
+                            "scale": 2
+                          },
+                          "destination": {
+                            "wallet_id": "01JBWALLETBOB000000000000B",
+                            "amount": "4975",
+                            "currency": "cGHS",
+                            "scale": 2
+                          },
+                          "fx": {
+                            "mid_rate": "12.5",
+                            "effective_rate": "12.4375",
+                            "spread_bps": 50,
+                            "fee_amount": "25",
+                            "rate_source": "live",
+                            "rate_refreshed_at": "2026-10-30T12:00:00.000Z"
+                          },
+                          "failure": null,
+                          "created_at": "2026-10-30T12:00:00.000Z",
+                          "completed_at": "2026-10-30T12:00:00.000Z",
+                          "direction": "OUT"
+                        }
+                      ],
+                      "next_cursor": null,
+                      "limit": 20
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "WALLET_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "error",
+                    "message": "Wallet 01J... was not found",
+                    "data": {
+                      "code": "WALLET_NOT_FOUND"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List a wallet's transactions, newest first",
+        "tags": [
+          "wallets"
+        ]
+      }
+    },
+    "/v1/health": {
+      "get": {
+        "operationId": "HealthController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Liveness of MongoDB, Redis and TigerBeetle",
+        "tags": [
+          "health"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "YAPA: YAPA Is Another Payment API",
+    "description": "Multi-currency stablecoin wallet sandbox (cNGN, cGHS, cXAF, USDx, EURx).\n\nConventions:\n- every response is an envelope `{ status, message, data }`;\n- amounts are integer strings in minor units (cXAF has 0 decimals, the others 2);\n- field names are snake_case;\n- `POST /transactions` is idempotent on `unique_reference`;\n- every response carries an `X-Request-Id` header.",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "admin-key": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-admin-key"
+      }
+    },
+    "schemas": {
+      "TriggerJobDto": {
+        "type": "object",
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Job payload"
+          }
+        }
+      },
+      "UpdateFxRateDto": {
+        "type": "object",
+        "properties": {
+          "rate": {
+            "type": "string",
+            "example": "0.95",
+            "description": "Static rate: units of quote currency per one unit of base currency"
+          },
+          "spread_bps": {
+            "type": "number",
+            "example": 50,
+            "minimum": 0,
+            "maximum": 9999
+          },
+          "prefer_static": {
+            "type": "boolean",
+            "description": "Use the static rate instead of live rates for this pair"
+          }
+        }
+      },
+      "CreateWalletDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "ada@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+2348031234567",
+            "description": "International format (E.164), including the country code"
+          }
+        }
+      },
+      "CreateTransactionDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "DEPOSIT",
+              "SWAP",
+              "TRANSFER"
+            ]
+          },
+          "unique_reference": {
+            "type": "string",
+            "example": "order-7f3a9c",
+            "description": "Client-chosen idempotency key; globally unique. Retrying with the same value and body replays the original result."
+          },
+          "amount": {
+            "type": "string",
+            "example": "500000",
+            "description": "Source amount as an integer string of minor units"
+          },
+          "currency": {
+            "type": "string",
+            "description": "DEPOSIT only: currency to deposit",
+            "enum": [
+              "cNGN",
+              "cGHS",
+              "cXAF",
+              "USDx",
+              "EURx"
+            ]
+          },
+          "source_wallet_id": {
+            "type": "string",
+            "description": "SWAP and TRANSFER"
+          },
+          "destination_wallet_id": {
+            "type": "string",
+            "description": "DEPOSIT and TRANSFER"
+          },
+          "source_currency": {
+            "type": "string",
+            "enum": [
+              "cNGN",
+              "cGHS",
+              "cXAF",
+              "USDx",
+              "EURx"
+            ],
+            "description": "SWAP and TRANSFER"
+          },
+          "destination_currency": {
+            "type": "string",
+            "enum": [
+              "cNGN",
+              "cGHS",
+              "cXAF",
+              "USDx",
+              "EURx"
+            ],
+            "description": "SWAP and TRANSFER"
+          }
+        },
+        "required": [
+          "type",
+          "unique_reference",
+          "amount"
+        ]
+      }
+    }
+  }
+}

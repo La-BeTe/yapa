@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { Env } from './env.schema';
 
 /** Typed accessor over the validated environment. */
 @Injectable()
 export class AppConfigService {
-  constructor(private readonly config: ConfigService<Env, true>) {}
+  constructor(private readonly env: Env) {}
 
   get<K extends keyof Env>(key: K): Env[K] {
-    return this.config.get(key, { infer: true });
+    return this.env[key];
   }
 }

@@ -68,12 +68,12 @@ class FakeBullFactory {
 }
 
 describe('jobs framework', () => {
-  // ConfigModule snapshots the environment at import time, so use the default key.
-  const adminKey = 'change-me';
+  const adminKey = 'test-admin-key';
   let app: INestApplication;
   let bull: FakeBullFactory;
 
   beforeAll(async () => {
+    process.env.ADMIN_API_KEY = adminKey;
     bull = new FakeBullFactory();
     const moduleRef = await Test.createTestingModule({
       imports: [AppConfigModule, JobsModule],
@@ -86,7 +86,10 @@ describe('jobs framework', () => {
     await app.init();
   });
 
-  afterAll(() => app.close());
+  afterAll(async () => {
+    await app.close();
+    delete process.env.ADMIN_API_KEY;
+  });
 
   it('discovers decorated workers and creates a queue and worker for each', () => {
     expect([...bull.queues.keys()].sort()).toEqual(['echo', 'ticker']);

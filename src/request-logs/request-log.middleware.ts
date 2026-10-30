@@ -42,7 +42,7 @@ export class RequestLogMiddleware implements NestMiddleware {
         occurred_at: new Date(req.startedAt ?? Date.now()).toISOString(),
       };
       this.jobs
-        .enqueue(REQUEST_LOG_JOB, entry, { jobId: `request-log:${requestId}` })
+        .enqueue(REQUEST_LOG_JOB, entry, { jobId: `request-log-${requestId}` })
         .catch((error: Error) =>
           this.logger.warn(`Could not enqueue request log: ${error.message}`),
         );

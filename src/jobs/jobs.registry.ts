@@ -71,7 +71,7 @@ export class JobsRegistry implements OnApplicationBootstrap, OnApplicationShutdo
           this.logger.warn(`${name} job ${job?.id} failed: ${error.message}`),
         );
         if (registered.schedule) {
-          await queue.upsertJobScheduler(`${name}:schedule`, registered.schedule, {
+          await queue.upsertJobScheduler(`${name}-schedule`, registered.schedule, {
             name,
             data: {},
             opts: instance.jobOptions,
@@ -93,7 +93,10 @@ export class JobsRegistry implements OnApplicationBootstrap, OnApplicationShutdo
     }));
   }
 
-  /** Enqueues a job; returns its id. A custom `jobId` deduplicates identical jobs. */
+  /**
+   * Enqueues a job; returns its id. A custom `jobId` deduplicates identical jobs
+   * (BullMQ rejects custom ids that are integers or contain ':').
+   */
   async enqueue<T>(name: string, payload: T, opts: JobsOptions = {}): Promise<string> {
     const { queue, instance } = this.get(name);
     const job = await queue.add(name, payload, { ...instance.jobOptions, ...opts });

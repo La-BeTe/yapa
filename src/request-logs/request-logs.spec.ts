@@ -96,7 +96,7 @@ describe('RequestLogMiddleware', () => {
 
     const { name, entry, opts } = enqueued[0]!;
     expect(name).toBe('request-log');
-    expect(opts.jobId).toBe(`request-log:${res.headers['x-request-id']}`);
+    expect(opts.jobId).toBe(`request-log-${res.headers['x-request-id']}`);
     expect(entry).toMatchObject({
       request_id: res.headers['x-request-id'],
       method: 'POST',

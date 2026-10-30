@@ -95,7 +95,7 @@ describe('jobs framework', () => {
 
   it('registers schedules only for repeatable workers', () => {
     expect(bull.queues.get('ticker')?.schedulers).toEqual([
-      { id: 'ticker:schedule', repeat: { every: 5000 } },
+      { id: 'ticker-schedule', repeat: { every: 5000 } },
     ]);
     expect(bull.queues.get('echo')?.schedulers).toEqual([]);
   });

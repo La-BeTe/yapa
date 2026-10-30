@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AccountsModule } from './accounts/accounts.module';
+import { AuditModule } from './audit/audit.module';
 import { RequestIdMiddleware } from './common/http/request-id.middleware';
 import { AppConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
@@ -17,6 +18,7 @@ import { RequestLogsModule } from './request-logs/request-logs.module';
     LedgerModule,
     JobsModule,
     RequestLogsModule,
+    AuditModule,
     AccountsModule,
   ],
 })

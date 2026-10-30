@@ -10,6 +10,14 @@ const shared = {
 module.exports = {
   projects: [
     { ...shared, displayName: 'unit', rootDir: 'src', testRegex: '.*\\.spec\\.ts$' },
-    { ...shared, displayName: 'e2e', rootDir: 'test', testRegex: '.*\\.e2e-spec\\.ts$' },
+    {
+      ...shared,
+      displayName: 'e2e',
+      rootDir: 'test',
+      testRegex: '.*\\.e2e-spec\\.ts$',
+      globalSetup: '<rootDir>/e2e/global-setup.ts',
+      globalTeardown: '<rootDir>/e2e/global-teardown.ts',
+      testTimeout: 60_000,
+    },
   ],
 };

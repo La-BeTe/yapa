@@ -5,14 +5,13 @@ import { CURRENCIES, CURRENCY_CODES, type CurrencyCode } from '../common/money/c
 import { AccountCode } from '../ledger/ledger.constants';
 import { LedgerService } from '../ledger/ledger.service';
 import { LedgerAccount, OperatorAccountType } from './account.schema';
+import { isDuplicateKeyError } from '../database/mongo-errors';
 
 const OPERATOR_TYPES: Record<OperatorAccountType, AccountCode> = {
   TREASURY: AccountCode.TREASURY,
   FX_POOL: AccountCode.FX_POOL,
   FEE: AccountCode.FEE,
 };
-
-const DUPLICATE_KEY = 11000;
 
 /**
  * Platform-owned accounts, one of each type per currency ledger:
@@ -81,7 +80,7 @@ export class OperatorAccountsService implements OnApplicationBootstrap {
       ).toObject();
     } catch (error) {
       // Another instance created it concurrently.
-      if ((error as { code?: number }).code === DUPLICATE_KEY) {
+      if (isDuplicateKeyError(error)) {
         return (await this.accounts.findOne({ type, currency }).lean())!;
       }
       throw error;

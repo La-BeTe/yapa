@@ -3,10 +3,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { BaseWorker, JobWorker } from '../jobs/base-worker';
 import { AuditEntry, AuditLog } from './audit-log.schema';
+import { isDuplicateKeyError } from '../database/mongo-errors';
 
 export const AUDIT_LOG_JOB = 'audit-log';
-const DUPLICATE_KEY = 11000;
-
 @Injectable()
 @JobWorker(AUDIT_LOG_JOB)
 export class AuditLogWorker extends BaseWorker<AuditEntry> {
@@ -28,7 +27,7 @@ export class AuditLogWorker extends BaseWorker<AuditEntry> {
         occurred_at: entry.occurred_at ? new Date(entry.occurred_at) : new Date(),
       });
     } catch (error) {
-      if ((error as { code?: number }).code !== DUPLICATE_KEY) {
+      if (!isDuplicateKeyError(error)) {
         throw error;
       }
     }

@@ -3,10 +3,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { BaseWorker, JobWorker } from '../jobs/base-worker';
 import { RequestLog, RequestLogEntry } from './request-log.schema';
+import { isDuplicateKeyError } from '../database/mongo-errors';
 
 export const REQUEST_LOG_JOB = 'request-log';
-const DUPLICATE_KEY = 11000;
-
 @Injectable()
 @JobWorker(REQUEST_LOG_JOB)
 export class RequestLogWorker extends BaseWorker<RequestLogEntry> {
@@ -22,7 +21,7 @@ export class RequestLogWorker extends BaseWorker<RequestLogEntry> {
       await this.logs.create({ ...entry, occurred_at: new Date(entry.occurred_at) });
     } catch (error) {
       // A retried job whose first attempt already wrote the log.
-      if ((error as { code?: number }).code !== DUPLICATE_KEY) {
+      if (!isDuplicateKeyError(error)) {
         throw error;
       }
     }

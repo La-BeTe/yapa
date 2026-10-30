@@ -5,6 +5,7 @@ import { RequestIdMiddleware } from './common/http/request-id.middleware';
 import { AppConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
 import { FxModule } from './fx/fx.module';
+import { HealthModule } from './health/health.module';
 import { JobsModule } from './jobs/jobs.module';
 import { LedgerModule } from './ledger/ledger.module';
 import { ReconcilerModule } from './reconciler/reconciler.module';
@@ -28,6 +29,7 @@ import { WalletsModule } from './wallets/wallets.module';
     WalletsModule,
     TransactionsModule,
     ReconcilerModule,
+    HealthModule,
   ],
 })
 export class AppModule implements NestModule {

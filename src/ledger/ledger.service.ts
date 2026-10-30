@@ -123,6 +123,11 @@ export class LedgerService implements OnApplicationShutdown {
     return new Set(found.map((account) => bigIntToUlid(account.id)));
   }
 
+  /** Round-trip to the cluster; the lookup of an unknown id is cheap and side-effect free. */
+  async ping(): Promise<void> {
+    await this.client.lookupAccounts([1n]);
+  }
+
   onApplicationShutdown(): void {
     this.client.destroy();
   }

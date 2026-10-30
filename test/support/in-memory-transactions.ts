@@ -75,3 +75,35 @@ export class InMemoryTransactionRepository implements TransactionRepository {
     row.updated_at = new Date(row.updated_at.getTime() - ms);
   }
 }
+
+export class InMemoryTransactionListCache {
+  readonly versions = new Map<string, number>();
+  readonly entries = new Map<string, string>();
+  failing = false;
+
+  private check() {
+    return this.failing ? Promise.reject(new Error('redis down')) : Promise.resolve();
+  }
+
+  async version(walletId: string) {
+    await this.check();
+    return this.versions.get(walletId) ?? 0;
+  }
+
+  async get(key: string) {
+    await this.check();
+    return this.entries.get(key) ?? null;
+  }
+
+  async set(key: string, value: string) {
+    await this.check();
+    this.entries.set(key, value);
+  }
+
+  async bump(walletIds: string[]) {
+    await this.check();
+    for (const id of new Set(walletIds)) {
+      this.versions.set(id, (this.versions.get(id) ?? 0) + 1);
+    }
+  }
+}

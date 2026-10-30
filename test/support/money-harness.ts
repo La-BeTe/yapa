@@ -15,11 +15,15 @@ import {
   TransactionExecutor,
   type TransactionFinalizedHook,
 } from '../../src/transactions/transaction.executor';
+import { TransactionHistoryService } from '../../src/transactions/transaction-history.service';
 import { TransactionsService } from '../../src/transactions/transactions.service';
 import type { WalletRecord, WalletsService } from '../../src/wallets/wallets.service';
 import { InMemoryTigerBeetle } from './in-memory-tigerbeetle';
 import { InMemoryLiveRateCache, InMemoryRateStore, StubRateProvider } from './in-memory-fx';
-import { InMemoryTransactionRepository } from './in-memory-transactions';
+import {
+  InMemoryTransactionListCache,
+  InMemoryTransactionRepository,
+} from './in-memory-transactions';
 
 const OPERATOR_CODES: Record<OperatorAccountType, AccountCode> = {
   TREASURY: AccountCode.TREASURY,
@@ -91,9 +95,22 @@ export async function createMoneyHarness(env: Record<string, string> = {}) {
       return Promise.resolve(wallet.record);
     },
     accountIds: (id: string) => Promise.resolve(wallets.get(id)!.accounts),
+    get: (id: string) =>
+      wallets.has(id)
+        ? Promise.resolve(wallets.get(id)!.record)
+        : Promise.reject(
+            AppError.notFound(ErrorCode.WALLET_NOT_FOUND, `Wallet ${id} was not found`),
+          ),
   } as unknown as WalletsService;
 
-  const executor = new TransactionExecutor(repository, ledger, audit, [hook]);
+  const listCache = new InMemoryTransactionListCache();
+  const history = new TransactionHistoryService(
+    repository,
+    listCache,
+    walletsService,
+    configService,
+  );
+  const executor = new TransactionExecutor(repository, ledger, audit, [hook, history]);
   const service = new TransactionsService(
     repository,
     executor,
@@ -159,6 +176,8 @@ export async function createMoneyHarness(env: Record<string, string> = {}) {
     finalized,
     executor,
     service,
+    history,
+    listCache,
     createWallet,
     balance,
     operatorBalance,

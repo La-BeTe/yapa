@@ -10,6 +10,7 @@ import { LedgerModule } from './ledger/ledger.module';
 import { RedisModule } from './redis/redis.module';
 import { RequestLogMiddleware } from './request-logs/request-log.middleware';
 import { RequestLogsModule } from './request-logs/request-logs.module';
+import { TransactionsModule } from './transactions/transactions.module';
 import { WalletsModule } from './wallets/wallets.module';
 
 @Module({
@@ -24,6 +25,7 @@ import { WalletsModule } from './wallets/wallets.module';
     AccountsModule,
     FxModule,
     WalletsModule,
+    TransactionsModule,
   ],
 })
 export class AppModule implements NestModule {

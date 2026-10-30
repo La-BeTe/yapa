@@ -13,6 +13,7 @@ export default tseslint.config(
       '.yarn',
       'eslint.config.mjs',
       'commitlint.config.js',
+      'jest.config.js',
     ],
   },
   eslint.configs.recommended,

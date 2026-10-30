@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+.git
+.github
+.husky
+.yarn/cache
+.yarn/install-state.gz
+*.tsbuildinfo
+.env
+docker-compose*.yml

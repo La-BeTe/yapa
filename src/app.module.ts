@@ -6,12 +6,22 @@ import { DatabaseModule } from './database/database.module';
 import { JobsModule } from './jobs/jobs.module';
 import { LedgerModule } from './ledger/ledger.module';
 import { RedisModule } from './redis/redis.module';
+import { RequestLogMiddleware } from './request-logs/request-log.middleware';
+import { RequestLogsModule } from './request-logs/request-logs.module';
 
 @Module({
-  imports: [AppConfigModule, DatabaseModule, RedisModule, LedgerModule, JobsModule, AccountsModule],
+  imports: [
+    AppConfigModule,
+    DatabaseModule,
+    RedisModule,
+    LedgerModule,
+    JobsModule,
+    RequestLogsModule,
+    AccountsModule,
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(RequestIdMiddleware).forRoutes('*');
+    consumer.apply(RequestIdMiddleware, RequestLogMiddleware).forRoutes('*');
   }
 }

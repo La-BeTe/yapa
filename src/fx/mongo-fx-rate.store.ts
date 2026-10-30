@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { AnyBulkWriteOperation, Model } from 'mongoose';
+import { newId } from '../common/ids/ulid';
 import type { CurrencyCode } from '../common/money/currency';
 import { FxRate } from './fx-rate.schema';
 import type { FxRateStore, RateUpdate, StoredRate } from './fx.types';
@@ -34,6 +35,8 @@ export class MongoFxRateStore implements FxRateStore {
           filter: { base_currency: base, quote_currency: quote },
           update: {
             $setOnInsert: {
+              // Upserts bypass schema defaults for _id, so the ULID is set explicitly.
+              _id: newId(),
               rate,
               spread_bps: defaultSpreadBps,
               prefer_static: false,

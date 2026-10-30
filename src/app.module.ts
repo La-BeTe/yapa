@@ -4,6 +4,7 @@ import { AuditModule } from './audit/audit.module';
 import { RequestIdMiddleware } from './common/http/request-id.middleware';
 import { AppConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
+import { FxModule } from './fx/fx.module';
 import { JobsModule } from './jobs/jobs.module';
 import { LedgerModule } from './ledger/ledger.module';
 import { RedisModule } from './redis/redis.module';
@@ -20,6 +21,7 @@ import { RequestLogsModule } from './request-logs/request-logs.module';
     RequestLogsModule,
     AuditModule,
     AccountsModule,
+    FxModule,
   ],
 })
 export class AppModule implements NestModule {

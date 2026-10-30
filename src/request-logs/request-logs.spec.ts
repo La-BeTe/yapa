@@ -110,6 +110,13 @@ describe('RequestLogMiddleware', () => {
     expect(entry.duration_ms).toBeGreaterThanOrEqual(0);
   });
 
+  it('skips health probes', async () => {
+    const before = enqueued.length;
+    await request(app.getHttpServer()).get('/v1/health');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(enqueued).toHaveLength(before);
+  });
+
   it('logs error responses produced by the exception filter', async () => {
     await request(app.getHttpServer()).get('/v1/things/broken').expect(422);
     await waitForLog(2);

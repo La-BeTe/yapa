@@ -5,6 +5,9 @@ import type { RequestLogEntry } from './request-log.schema';
 import { redactHeaders, truncateBody } from './sanitize';
 import { REQUEST_LOG_JOB } from './request-log.worker';
 
+/** Swagger UI assets and health probes would only add noise. */
+const UNLOGGED_PATHS = ['/docs', '/v1/health'];
+
 /**
  * Captures each request and the response body sent back, then hands the record to the
  * request-log worker. Logging is fire-and-forget: it never delays or fails the request.
@@ -16,6 +19,9 @@ export class RequestLogMiddleware implements NestMiddleware {
   constructor(private readonly jobs: JobsRegistry) {}
 
   use(req: Request, res: Response, next: NextFunction): void {
+    if (UNLOGGED_PATHS.some((prefix) => req.originalUrl.startsWith(prefix))) {
+      return next();
+    }
     let responseBody: unknown = null;
     const json = res.json.bind(res);
     res.json = (body: unknown) => {

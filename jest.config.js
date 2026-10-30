@@ -3,6 +3,7 @@ const shared = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   transform: { '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.json' }] },
   testEnvironment: 'node',
+  setupFiles: ['<rootDir>/../test/support/jest-setup.ts'],
 };
 
 /** @type {import('jest').Config} */

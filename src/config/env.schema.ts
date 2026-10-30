@@ -15,7 +15,7 @@ export const envSchema = z.object({
   REDIS_URL: z.string().min(1).default('redis://localhost:6379'),
 
   TB_CLUSTER_ID: z.coerce.bigint().nonnegative().default(0n),
-  TB_ADDRESS: z.string().min(1).default('127.0.0.1:3000'),
+  TB_ADDRESS: z.string().min(1).default('127.0.0.1:3001'),
 
   ADMIN_API_KEY: z.string().min(8).default('change-me'),
 

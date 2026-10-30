@@ -25,6 +25,9 @@ services:
 
   mongo:
     image: mongo:7
+    # Published for local development (`yarn start:dev` against the containers).
+    ports:
+      - '${MONGO_PORT:-27017}:27017'
     volumes:
       - mongo-data:/data/db
     healthcheck:
@@ -37,6 +40,8 @@ services:
     image: redis:7-alpine
     # BullMQ requires that Redis never evicts keys.
     command: ['redis-server', '--appendonly', 'yes', '--maxmemory-policy', 'noeviction']
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
     volumes:
       - redis-data:/data
     healthcheck:
@@ -47,6 +52,9 @@ services:
 
   tigerbeetle:
     build: ./docker/tigerbeetle
+    # Host port 3001 because the API uses 3000.
+    ports:
+      - '${TB_PORT:-3001}:3000'
     volumes:
       - tigerbeetle-data:/data
     # Docker >= 25 blocks io_uring under the default seccomp profile, and

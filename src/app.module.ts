@@ -7,6 +7,7 @@ import { DatabaseModule } from './database/database.module';
 import { FxModule } from './fx/fx.module';
 import { JobsModule } from './jobs/jobs.module';
 import { LedgerModule } from './ledger/ledger.module';
+import { ReconcilerModule } from './reconciler/reconciler.module';
 import { RedisModule } from './redis/redis.module';
 import { RequestLogMiddleware } from './request-logs/request-log.middleware';
 import { RequestLogsModule } from './request-logs/request-logs.module';
@@ -26,6 +27,7 @@ import { WalletsModule } from './wallets/wallets.module';
     FxModule,
     WalletsModule,
     TransactionsModule,
+    ReconcilerModule,
   ],
 })
 export class AppModule implements NestModule {

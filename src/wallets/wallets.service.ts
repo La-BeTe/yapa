@@ -99,6 +99,16 @@ export class WalletsService {
     return wallet;
   }
 
+  /** Wallets whose provisioning was interrupted (e.g. the ledger was unreachable). */
+  findStaleProvisioning(olderThan: Date, limit: number): Promise<WalletRecord[]> {
+    return this.wallets
+      .find({ status: 'PROVISIONING', updated_at: { $lt: olderThan } })
+      .sort({ updated_at: 1 })
+      .limit(limit)
+      .lean<WalletRecord[]>()
+      .exec();
+  }
+
   async get(walletId: string): Promise<WalletRecord> {
     const wallet = await this.wallets.findById(walletId).lean<WalletRecord>();
     if (!wallet) {

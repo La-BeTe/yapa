@@ -7,7 +7,12 @@ export const Dec = Decimal.clone({ precision: 60, rounding: Decimal.ROUND_DOWN }
 /** Upper bound for a single amount: fits in a signed 64-bit integer, far below u128. */
 export const MAX_AMOUNT = (1n << 63n) - 1n;
 const MINOR_UNITS_PATTERN = /^[1-9]\d*$/;
-const RATE_SIGNIFICANT_DIGITS = 15;
+/**
+ * Rates are rounded to nearest at 20 significant digits. The rounded rate is the rate that is
+ * recorded and applied, so `floor(amount × recorded rate)` is always reproducible; truncating
+ * instead would turn exact results such as 1500 NGN -> 1 USD into 0.99.
+ */
+const RATE_SIGNIFICANT_DIGITS = 20;
 const BPS_DENOMINATOR = 10_000n;
 
 /** Parses a positive integer string of minor units (e.g. "150025" = 1500.25 at scale 2). */
@@ -36,7 +41,7 @@ export function normaliseRate(rate: Decimal.Value): string {
   if (!value.isFinite() || value.lte(0)) {
     throw new Error(`Invalid FX rate: ${String(rate)}`);
   }
-  return value.toSignificantDigits(RATE_SIGNIFICANT_DIGITS).toFixed();
+  return value.toSignificantDigits(RATE_SIGNIFICANT_DIGITS, Decimal.ROUND_HALF_UP).toFixed();
 }
 
 /**

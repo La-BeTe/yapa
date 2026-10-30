@@ -65,9 +65,18 @@ describe('toMajorUnits', () => {
 describe('rates', () => {
   it('derives cross rates from a common base', () => {
     // 1 USD = 1500 NGN and 0.92 EUR, so 1 NGN = 0.92 / 1500 EUR.
-    expect(crossRate('1500', '0.92')).toBe('0.000613333333333333');
-    expect(crossRate('0.92', '1500')).toBe('1630.43478260869');
+    expect(crossRate('1500', '0.92')).toBe('0.00061333333333333333333');
+    expect(crossRate('0.92', '1500')).toBe('1630.4347826086956522');
     expect(crossRate('1', '1')).toBe('1');
+  });
+
+  it('rounds rates to nearest so exact conversions stay exact', () => {
+    const ngnToUsd = crossRate('1500', '1');
+    expect(ngnToUsd).toBe('0.00066666666666666666667');
+    // 1,500.00 NGN must be worth exactly 1.00 USD, not 0.99.
+    expect(
+      convert({ amount: 150000n, fromScale: 2, toScale: 2, midRate: ngnToUsd, spreadBps: 0 }).net,
+    ).toBe(100n);
   });
 
   it('applies a spread to the mid rate', () => {
@@ -111,7 +120,13 @@ describe('convert', () => {
   });
 
   it('never credits more than the exact value', () => {
-    const rates = ['0.000613333333333333', '1630.43478260869', '655.957', '0.0075', '1.0001'];
+    const rates = [
+      '0.00061333333333333333333',
+      '1630.4347826086956522',
+      '655.957',
+      '0.0075',
+      '1.0001',
+    ];
     for (const midRate of rates) {
       for (const amount of [1n, 7n, 99n, 12345n, 987654321n]) {
         for (const [fromScale, toScale] of [

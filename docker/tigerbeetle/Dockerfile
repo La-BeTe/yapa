@@ -3,13 +3,15 @@
 FROM alpine:3.22
 
 ARG TIGERBEETLE_VERSION=0.17.9
-ARG TARGETARCH
 
+# Detect the architecture from the build container itself: TARGETARCH is only set by
+# BuildKit, and the legacy builder (e.g. Colima without buildx) would otherwise fetch the
+# x86_64 binary on ARM, which hangs under emulation.
 RUN set -eux; \
-    case "${TARGETARCH:-amd64}" in \
-      amd64) arch=x86_64 ;; \
-      arm64) arch=aarch64 ;; \
-      *) echo "unsupported arch: ${TARGETARCH}" >&2; exit 1 ;; \
+    arch="$(uname -m)"; \
+    case "$arch" in \
+      x86_64|aarch64) ;; \
+      *) echo "unsupported arch: $arch" >&2; exit 1 ;; \
     esac; \
     wget -q -O /tmp/tb.zip "https://github.com/tigerbeetle/tigerbeetle/releases/download/${TIGERBEETLE_VERSION}/tigerbeetle-${arch}-linux.zip"; \
     unzip -q /tmp/tb.zip -d /usr/local/bin; \

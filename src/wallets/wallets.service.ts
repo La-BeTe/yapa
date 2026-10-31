@@ -10,6 +10,7 @@ import { CURRENCIES, CURRENCY_CODES, type CurrencyCode } from '../common/money/c
 import { FxRateService } from '../fx/fx-rate.service';
 import { AccountCode } from '../ledger/ledger.constants';
 import { LedgerService } from '../ledger/ledger.service';
+import { AppConfigService } from '../config/app-config.service';
 import { normaliseIdentity } from './identity';
 import { Wallet } from './wallet.schema';
 import type { CreateWalletDto } from './wallets.dto';
@@ -38,11 +39,14 @@ export class WalletsService {
     private readonly ledger: LedgerService,
     private readonly fx: FxRateService,
     private readonly audit: AuditPublisher,
+    private readonly config: AppConfigService,
   ) {}
 
   /**
    * Creates a wallet and its five ledger accounts. Safe to retry: if an earlier attempt
    * stopped before the ledger accounts existed, retrying with the same identity finishes it.
+   * A creation that is still in flight (not yet stale) is a conflict, so concurrent
+   * requests for one identity produce a single 201.
    */
   async create(
     dto: CreateWalletDto,
@@ -51,7 +55,11 @@ export class WalletsService {
     const identity = normaliseIdentity(dto);
     const existing = await this.findByIdentity(identity);
     if (existing) {
-      if (existing.status === 'PROVISIONING' && sameIdentity(existing, identity)) {
+      if (
+        existing.status === 'PROVISIONING' &&
+        sameIdentity(existing, identity) &&
+        this.isStale(existing)
+      ) {
         return { wallet: await this.activate(existing._id), created: true };
       }
       throw conflict();
@@ -97,6 +105,11 @@ export class WalletsService {
     }
     await this.audit.publish([{ wallet_id: walletId, event: 'WALLET_ACTIVATED' }]);
     return wallet;
+  }
+
+  private isStale(wallet: WalletRecord): boolean {
+    const staleAfter = this.config.get('RECONCILER_STALE_AFTER_MS');
+    return Date.now() - new Date(wallet.updated_at).getTime() >= staleAfter;
   }
 
   /** Wallets whose provisioning was interrupted (e.g. the ledger was unreachable). */

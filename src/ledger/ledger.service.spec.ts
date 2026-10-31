@@ -1,4 +1,3 @@
-import type { Client } from 'tigerbeetle-node';
 import { InMemoryTigerBeetle } from '../../test/support/in-memory-tigerbeetle';
 import { AppError } from '../common/http/app-error';
 import { newId, ulidToBigInt } from '../common/ids/ulid';
@@ -16,7 +15,7 @@ describe('LedgerService', () => {
 
   beforeEach(async () => {
     tb = new InMemoryTigerBeetle();
-    ledger = new LedgerService(tb as unknown as Client);
+    ledger = new LedgerService(tb);
     await ledger.createAccounts([
       { id: treasury, ledger: 1, code: AccountCode.TREASURY, preventOverdraft: false },
       { id: alice, ledger: 1, code: AccountCode.USER, preventOverdraft: true },

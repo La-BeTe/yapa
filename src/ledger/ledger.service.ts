@@ -2,7 +2,6 @@ import { HttpStatus, Inject, Injectable, OnApplicationShutdown } from '@nestjs/c
 import {
   type Account,
   AccountFlags,
-  type Client,
   CreateAccountStatus,
   CreateTransferStatus,
   type Transfer,
@@ -11,6 +10,7 @@ import {
 import { AppError, ErrorCode } from '../common/http/app-error';
 import { bigIntToUlid, ulidToBigInt } from '../common/ids/ulid';
 import { AccountCode, TIGERBEETLE_CLIENT, TransferCode } from './ledger.constants';
+import type { LedgerClient } from './tigerbeetle.connection';
 
 export interface LedgerAccountSpec {
   /** ULID of the matching `accounts` document; used verbatim as the TigerBeetle id. */
@@ -47,7 +47,7 @@ const OK_ACCOUNT = new Set([CreateAccountStatus.created, CreateAccountStatus.exi
  */
 @Injectable()
 export class LedgerService implements OnApplicationShutdown {
-  constructor(@Inject(TIGERBEETLE_CLIENT) private readonly client: Client) {}
+  constructor(@Inject(TIGERBEETLE_CLIENT) private readonly client: LedgerClient) {}
 
   async createAccounts(specs: LedgerAccountSpec[]): Promise<void> {
     if (specs.length === 0) {

@@ -1,9 +1,10 @@
-import { Logger, Provider } from '@nestjs/common';
+import { Provider } from '@nestjs/common';
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { createClient } from 'tigerbeetle-node';
 import { AppConfigService } from '../config/app-config.service';
 import { TIGERBEETLE_CLIENT } from './ledger.constants';
+import { TigerBeetleConnection } from './tigerbeetle.connection';
 
 /**
  * The TigerBeetle client only accepts IP addresses, so hostnames such as the
@@ -26,12 +27,11 @@ export async function resolveReplicaAddress(address: string): Promise<string> {
 export const tigerBeetleClientProvider: Provider = {
   provide: TIGERBEETLE_CLIENT,
   inject: [AppConfigService],
-  useFactory: async (config: AppConfigService) => {
-    const address = await resolveReplicaAddress(config.get('TB_ADDRESS'));
-    new Logger('TigerBeetle').log(`Connecting to replica at ${address}`);
-    return createClient({
-      cluster_id: config.get('TB_CLUSTER_ID'),
-      replica_addresses: [address],
-    });
-  },
+  useFactory: (config: AppConfigService) =>
+    TigerBeetleConnection.open({
+      resolve: () => resolveReplicaAddress(config.get('TB_ADDRESS')),
+      connect: (address) =>
+        createClient({ cluster_id: config.get('TB_CLUSTER_ID'), replica_addresses: [address] }),
+      requestTimeoutMs: config.get('TB_REQUEST_TIMEOUT_MS'),
+    }),
 };

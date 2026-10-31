@@ -16,6 +16,7 @@ export const envSchema = z.object({
 
   TB_CLUSTER_ID: z.coerce.bigint().nonnegative().default(0n),
   TB_ADDRESS: z.string().min(1).default('127.0.0.1:3001'),
+  TB_REQUEST_TIMEOUT_MS: positiveInt.default(5000),
 
   ADMIN_API_KEY: z.string().min(8).default('change-me'),
 

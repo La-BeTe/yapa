@@ -1,4 +1,3 @@
-import type { Client } from 'tigerbeetle-node';
 import type { OperatorAccountType } from '../../src/accounts/account.schema';
 import type { OperatorAccountsService } from '../../src/accounts/operator-accounts.service';
 import type { AuditEntry } from '../../src/audit/audit-log.schema';
@@ -40,7 +39,7 @@ export async function createMoneyHarness(env: Record<string, string> = {}) {
   const configService = { get: (key: keyof typeof config) => config[key] } as AppConfigService;
 
   const tb = new InMemoryTigerBeetle();
-  const ledger = new LedgerService(tb as unknown as Client);
+  const ledger = new LedgerService(tb);
   const provider = new StubRateProvider();
   const rateStore = new InMemoryRateStore();
   const fx = new FxRateService(provider, rateStore, new InMemoryLiveRateCache(), configService);

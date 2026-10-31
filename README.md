@@ -384,6 +384,8 @@ Each ledger always sums to zero. Pool balances show the platform's net FX positi
 
 Because the ledger ids are fixed before submission, any re-execution (client retry or reconciler) resubmits the same ids. TigerBeetle answers `exists` for legs it already applied, so **money can't move twice**, even after a crash between the ledger write and the Mongo update. Failed transactions are final: TigerBeetle rejects reused failed ids (`id_already_failed`), and the client should retry with a new reference.
 
+**If TigerBeetle is unreachable**, every ledger request is bounded by `TB_REQUEST_TIMEOUT_MS` (the client would otherwise retry forever), so the transaction stays `PENDING` and the API answers `TRANSACTION_PENDING` (503). The client only accepts IPs, so `TB_ADDRESS` is resolved at boot; after any ledger failure the hostname is resolved again and, if the replica moved (e.g. its container was recreated), the API reconnects without a restart.
+
 Validation errors, unknown wallets and FX unavailability are rejected **before** anything is stored, so the same reference can be reused after fixing the request.
 
 ## Concurrency

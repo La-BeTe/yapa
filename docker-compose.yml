@@ -21,6 +21,9 @@ services:
         condition: service_healthy
       tigerbeetle:
         condition: service_healthy
+    # The TigerBeetle client also uses io_uring, which Docker's default seccomp profile blocks.
+    security_opt:
+      - seccomp=unconfined
     restart: unless-stopped
 
   mongo:

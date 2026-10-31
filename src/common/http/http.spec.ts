@@ -16,7 +16,7 @@ import { AppError, ErrorCode } from './app-error';
 import { configureApp } from './configure-app';
 import { failure } from './envelope';
 import { REQUEST_ID_HEADER, RequestIdMiddleware } from './request-id.middleware';
-import { RawEnvelope } from './response-envelope.interceptor';
+import { RawEnvelope, WithMeta } from './response-envelope.interceptor';
 import { ResponseMessage } from './response-message.decorator';
 
 class EchoDto {
@@ -54,6 +54,12 @@ class ProbeController {
     return new RawEnvelope(failure(ErrorCode.INSUFFICIENT_FUNDS, 'replayed'));
   }
 
+  @Get('paged')
+  @ResponseMessage('Page retrieved')
+  paged() {
+    return new WithMeta([{ value: 1 }], { next_cursor: null, limit: 1 });
+  }
+
   @Post('echo')
   echo(@Body() body: EchoDto) {
     return body;
@@ -81,6 +87,16 @@ describe('HTTP conventions', () => {
   it('wraps results in a success envelope with the route message', async () => {
     const res = await request(app.getHttpServer()).get('/v1/probe/ok').expect(200);
     expect(res.body).toEqual({ status: 'success', message: 'Probe succeeded', data: { value: 1 } });
+  });
+
+  it('adds meta next to data for results that carry it', async () => {
+    const res = await request(app.getHttpServer()).get('/v1/probe/paged').expect(200);
+    expect(res.body).toEqual({
+      status: 'success',
+      message: 'Page retrieved',
+      data: [{ value: 1 }],
+      meta: { next_cursor: null, limit: 1 },
+    });
   });
 
   it('maps domain errors to the error envelope with their code and status', async () => {

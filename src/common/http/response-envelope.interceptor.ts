@@ -9,6 +9,14 @@ export class RawEnvelope<T> {
   constructor(readonly envelope: Envelope<T>) {}
 }
 
+/** A handler result whose envelope carries `meta` (e.g. pagination) next to `data`. */
+export class WithMeta<T> {
+  constructor(
+    readonly data: T,
+    readonly meta: Record<string, unknown>,
+  ) {}
+}
+
 @Injectable()
 export class ResponseEnvelopeInterceptor implements NestInterceptor {
   constructor(private readonly reflector: Reflector) {}
@@ -20,12 +28,16 @@ export class ResponseEnvelopeInterceptor implements NestInterceptor {
         context.getClass(),
       ]) ?? 'OK';
 
-    return next
-      .handle()
-      .pipe(
-        map((body: unknown) =>
-          body instanceof RawEnvelope ? body.envelope : success(message, body ?? null),
-        ),
-      );
+    return next.handle().pipe(
+      map((body: unknown) => {
+        if (body instanceof RawEnvelope) {
+          return body.envelope;
+        }
+        if (body instanceof WithMeta) {
+          return success(message, body.data, body.meta);
+        }
+        return success(message, body ?? null);
+      }),
+    );
   }
 }

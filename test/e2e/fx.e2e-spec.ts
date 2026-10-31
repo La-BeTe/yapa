@@ -1,12 +1,16 @@
 import type Redis from 'ioredis';
 import { REDIS } from '../../src/redis/redis.constants';
+import { StubRateProvider } from '../support/in-memory-fx';
 import { createE2eApp, eventually, type E2eApp } from './e2e-app';
 
 describe('FX rates (e2e)', () => {
   let ctx: E2eApp;
 
   beforeAll(async () => {
-    ctx = await createE2eApp('fx');
+    // Start with the provider down so no rates are fetched on boot.
+    const provider = new StubRateProvider();
+    provider.failing = true;
+    ctx = await createE2eApp('fx', {}, provider);
   });
 
   afterAll(() => ctx.close());
@@ -15,7 +19,6 @@ describe('FX rates (e2e)', () => {
     rates.find((r) => r.base_currency === base && r.quote_currency === quote)!;
 
   it('returns 503 while no rates have ever been fetched and the provider is down', async () => {
-    ctx.provider.failing = true;
     const res = await ctx.http.get('/v1/fx-rates').expect(503);
     expect(res.body).toMatchObject({ status: 'error', data: { code: 'FX_RATE_UNAVAILABLE' } });
     ctx.provider.failing = false;

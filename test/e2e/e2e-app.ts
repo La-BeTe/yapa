@@ -1,13 +1,12 @@
 import type { INestApplication } from '@nestjs/common';
 import { getConnectionToken } from '@nestjs/mongoose';
 import { Test } from '@nestjs/testing';
-import type Redis from 'ioredis';
+import Redis from 'ioredis';
 import type { Connection } from 'mongoose';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { configureApp } from '../../src/common/http/configure-app';
 import { LIVE_RATE_PROVIDER } from '../../src/fx/fx.types';
-import { REDIS } from '../../src/redis/redis.constants';
 import { StubRateProvider } from '../support/in-memory-fx';
 
 let suiteCounter = 0;
@@ -24,11 +23,13 @@ export interface E2eApp {
 /**
  * Boots the real AppModule against the shared containers. Each suite gets its own MongoDB
  * database and Redis logical database so suites (and their BullMQ workers) stay isolated.
- * The live FX provider is replaced by a controllable stub.
+ * The live FX provider is replaced by a controllable stub, which can be prepared before boot
+ * (the fx-refresh scheduler fetches rates as soon as the app starts).
  */
 export async function createE2eApp(
   suite: string,
   env: Record<string, string> = {},
+  provider = new StubRateProvider(),
 ): Promise<E2eApp> {
   const redisDb = (Number(process.env.JEST_WORKER_ID ?? 1) * 4 + suiteCounter++) % 16;
   const adminKey = 'e2e-admin-key';
@@ -43,7 +44,11 @@ export async function createE2eApp(
     ...env,
   });
 
-  const provider = new StubRateProvider();
+  // Flush before boot: flushing afterwards would wipe the BullMQ keys of running workers.
+  const redis = new Redis(process.env.REDIS_URL!);
+  await redis.flushdb();
+  await redis.quit();
+
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(LIVE_RATE_PROVIDER)
     .useValue(provider)
@@ -52,7 +57,6 @@ export async function createE2eApp(
   await app.init();
 
   const mongo = app.get<Connection>(getConnectionToken());
-  await app.get<Redis>(REDIS).flushdb();
 
   return {
     app,

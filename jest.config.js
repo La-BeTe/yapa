@@ -17,7 +17,7 @@ module.exports = {
       testRegex: '.*\\.e2e-spec\\.ts$',
       globalSetup: '<rootDir>/e2e/global-setup.ts',
       globalTeardown: '<rootDir>/e2e/global-teardown.ts',
-      testTimeout: 60_000,
+      setupFilesAfterEnv: ['<rootDir>/support/e2e-timeout.ts'],
     },
   ],
 };

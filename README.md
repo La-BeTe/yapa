@@ -88,11 +88,13 @@ Useful URLs:
 ```bash
 corepack enable
 yarn install
-docker compose up -d mongo redis tigerbeetle   # published on 27017, 6379 and 3001
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d mongo redis tigerbeetle
 cp .env.example .env
 set -a && source .env && set +a
 yarn start:dev
 ```
+
+`docker-compose.dev.yml` publishes MongoDB, Redis and TigerBeetle on 27017, 6379 and 3001 (override with `MONGO_PORT`, `REDIS_PORT`, `TB_PORT`). The default `docker compose up` publishes only the API, so it does not clash with databases already running on the host.
 
 Configuration is environment-driven and validated at boot ([`src/config/env.schema.ts`](src/config/env.schema.ts), example in [`.env.example`](.env.example)).
 

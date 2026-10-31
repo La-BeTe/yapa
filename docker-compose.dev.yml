@@ -1,0 +1,15 @@
+# Publishes the dependencies for local development (`yarn start:dev` on the host):
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d mongo redis tigerbeetle
+services:
+  mongo:
+    ports:
+      - '${MONGO_PORT:-27017}:27017'
+
+  redis:
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+
+  tigerbeetle:
+    # Host port 3001 because the API uses 3000.
+    ports:
+      - '${TB_PORT:-3001}:3000'

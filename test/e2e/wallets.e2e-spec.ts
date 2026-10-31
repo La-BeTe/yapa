@@ -9,12 +9,17 @@ describe('Wallets (e2e)', () => {
 
   afterAll(() => ctx.close());
 
-  it('reports healthy dependencies', async () => {
+  it('reports health, with per-dependency checks only for admins', async () => {
     const res = await ctx.http.get('/v1/health').expect(200);
-    expect(res.body).toEqual({
-      status: 'success',
-      message: 'OK',
-      data: { healthy: true, checks: { mongo: 'up', redis: 'up', ledger: 'up' } },
+    expect(res.body).toEqual({ status: 'success', message: 'OK', data: { healthy: true } });
+
+    const wrongKey = await ctx.http.get('/v1/health').set('x-admin-key', 'nope').expect(200);
+    expect(wrongKey.body.data).toEqual({ healthy: true });
+
+    const admin = await ctx.http.get('/v1/health').set('x-admin-key', ctx.adminKey).expect(200);
+    expect(admin.body.data).toEqual({
+      healthy: true,
+      checks: { mongo: 'up', redis: 'up', ledger: 'up' },
     });
   });
 

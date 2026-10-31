@@ -1,9 +1,11 @@
-import { Controller, Get, HttpStatus, Inject, Res } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Inject, Req, Res } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import type { Response } from 'express';
+import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import type { Request, Response } from 'express';
 import type Redis from 'ioredis';
 import type { Connection } from 'mongoose';
+import { hasAdminKey } from '../common/auth/admin-key.guard';
+import { AppConfigService } from '../config/app-config.service';
 import { LedgerService } from '../ledger/ledger.service';
 import { REDIS } from '../redis/redis.constants';
 
@@ -18,11 +20,17 @@ export class HealthController {
     @InjectConnection() private readonly mongo: Connection,
     @Inject(REDIS) private readonly redis: Redis,
     private readonly ledger: LedgerService,
+    private readonly config: AppConfigService,
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Liveness of MongoDB, Redis and TigerBeetle' })
-  async check(@Res({ passthrough: true }) res: Response) {
+  @ApiOperation({
+    summary: 'Liveness of MongoDB, Redis and TigerBeetle',
+    description:
+      'Returns 200 or 503 with `healthy`. Per-dependency `checks` are included only for requests with a valid X-Admin-Key.',
+  })
+  @ApiSecurity('admin-key')
+  async check(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const [mongo, redis, ledger] = await Promise.all([
       probe(() => this.mongo.db!.admin().ping()),
       probe(() => this.redis.ping()),
@@ -30,6 +38,9 @@ export class HealthController {
     ]);
     const healthy = mongo === 'up' && redis === 'up' && ledger === 'up';
     res.status(healthy ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE);
+    if (!hasAdminKey(req, this.config.get('ADMIN_API_KEY'))) {
+      return { healthy };
+    }
     return { healthy, checks: { mongo, redis, ledger } };
   }
 }

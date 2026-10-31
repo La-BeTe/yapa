@@ -79,7 +79,7 @@ This starts the API (`http://localhost:3000`), MongoDB, Redis and TigerBeetle. T
 Useful URLs:
 
 - Swagger UI: http://localhost:3000/docs (raw spec at `/docs/docs.json`)
-- Health: http://localhost:3000/v1/health
+- Health: http://localhost:3000/v1/health (send `X-Admin-Key` to see the MongoDB, Redis and TigerBeetle checks)
 
 > TigerBeetle uses io_uring and locks memory, so its container runs with `seccomp=unconfined`, `IPC_LOCK` and an unlimited memlock ulimit (see `docker-compose.yml`). On Docker Desktop, give the VM at least 4 GB of memory.
 
@@ -114,8 +114,8 @@ yarn lint && yarn typecheck
 
 All routes are under `/v1`. Conventions:
 
-- Every response is an envelope: `{ "status": "success" | "error", "message": string, "data": ... }`. Errors carry `data: { code, details? }` with a stable machine-readable `code`.
-- **Amounts are integer strings in minor units.** cNGN, cGHS, USDx and EURx have 2 decimals (`"150025"` = 1,500.25); cXAF has 0. Each amount in a response comes with its `scale`.
+- Every response is an envelope: `{ "status": "success" | "error", "message": string, "data": ... }`. Paginated responses add `meta` (`next_cursor`, `limit`) next to `data`. Errors carry `data: { code, details? }` with a stable machine-readable `code`.
+- **Amounts are integer strings in minor units.** cNGN, cGHS, USDx and EURx have 2 decimals (`"150025"` = 1,500.25); cXAF has 0. Wallet balances include each currency's `scale`; transaction amounts use the same per-currency scale.
 - Field names are snake_case. IDs are ULIDs.
 - Every response carries an `X-Request-Id` header. Send your own (a ULID) to correlate.
 
@@ -171,8 +171,8 @@ POST /v1/transactions
     "type": "DEPOSIT",
     "status": "COMPLETED",
     "unique_reference": "dep-0001",
-    "source": { "wallet_id": null, "amount": "1500000", "currency": "cNGN", "scale": 2 },
-    "destination": { "wallet_id": "01JBWALLETALICE0000000000A", "amount": "1500000", "currency": "cNGN", "scale": 2 },
+    "source": { "wallet_id": null, "amount": "1500000", "currency": "cNGN" },
+    "destination": { "wallet_id": "01JBWALLETALICE0000000000A", "amount": "1500000", "currency": "cNGN" },
     "fx": null,
     "failure": null,
     "created_at": "2026-10-30T12:00:00.000Z",
@@ -202,8 +202,8 @@ POST /v1/transactions
   "message": "Transaction completed",
   "data": {
     "type": "SWAP",
-    "source": { "wallet_id": "01JBWALLETALICE0000000000A", "amount": "750000", "currency": "cNGN", "scale": 2 },
-    "destination": { "wallet_id": "01JBWALLETALICE0000000000A", "amount": "498", "currency": "USDx", "scale": 2 },
+    "source": { "wallet_id": "01JBWALLETALICE0000000000A", "amount": "750000", "currency": "cNGN" },
+    "destination": { "wallet_id": "01JBWALLETALICE0000000000A", "amount": "498", "currency": "USDx" },
     "fx": {
       "mid_rate": "0.00066666666666666666667",
       "effective_rate": "0.00066333333333333333334",
@@ -281,17 +281,18 @@ Balances are read live from TigerBeetle. `total_usd` values each balance at the 
 ### History and single transactions
 
 ```http
-GET /v1/wallets/{id}/transactions?type=TRANSFER&currency=USDx&limit=20&cursor=01JB...
+GET /v1/transactions?wallet_id=01JB...&type=TRANSFER&currency=USDx&limit=20&cursor=01JB...
 GET /v1/transactions/{id}
 ```
 
-History includes deposits, swaps and transfers sent and received, newest first. Each item has a `direction` (`IN`, `OUT`, `SELF`). `currency` matches either side. Pagination is cursor-based: pass `next_cursor` back as `cursor`.
+`wallet_id` is required. History includes deposits, swaps and transfers the wallet sent and received, newest first. Each item has a `direction` (`IN`, `OUT`, `SELF`). `currency` matches either side. Pagination is cursor-based: pass `meta.next_cursor` back as `cursor`.
 
 ```json
 {
-  "items": [{ "...transaction...": "", "direction": "OUT" }],
-  "next_cursor": "01JB...",
-  "limit": 20
+  "status": "success",
+  "message": "Transactions retrieved",
+  "data": [{ "...transaction...": "", "direction": "OUT" }],
+  "meta": { "next_cursor": "01JB...", "limit": 20 }
 }
 ```
 

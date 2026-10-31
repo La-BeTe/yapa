@@ -20,8 +20,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky",
-    "openapi:export": "ts-node --transpile-only scripts/export-openapi.ts"
+    "prepare": "husky"
   },
   "dependencies": {
     "@nestjs/common": "^11",
@@ -65,7 +64,6 @@
     "supertest": "^7.3.1",
     "testcontainers": "^12.2.1",
     "ts-jest": "^29.4.15",
-    "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.1"

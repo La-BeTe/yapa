@@ -41,7 +41,7 @@ The name is a recursive acronym in the tradition of GNU and YACC: an honest desc
 | IDs            | ULID                                                                   | Time-ordered, used for every Mongo `_id` **and** as TigerBeetle u128 ids, so an id means the same thing in both stores.                                                                                             |
 | Tests          | Jest, Supertest, Testcontainers                                        | Unit tests on in-memory fakes, plus e2e tests against real MongoDB, Redis and TigerBeetle containers.                                                                                                               |
 | Tooling        | Yarn 4 (Corepack), ESLint, Prettier, commitlint, husky, GitHub Actions | Conventional commits are enforced by a commit-msg hook and checked in CI.                                                                                                                                           |
-| API docs       | OpenAPI 3 (`@nestjs/swagger`)                                          | Served at `/docs`; committed as [`docs/openapi.json`](docs/openapi.json).                                                                                                                                           |
+| API docs       | OpenAPI 3 (`@nestjs/swagger`)                                          | Served at `/docs`, with the raw spec at `/docs/docs.json`.                                                                                                                                                          |
 
 ## Why this database setup
 
@@ -78,7 +78,7 @@ This starts the API (`http://localhost:3000`), MongoDB, Redis and TigerBeetle. T
 
 Useful URLs:
 
-- Swagger UI: http://localhost:3000/docs (raw spec at `/docs/openapi.json`)
+- Swagger UI: http://localhost:3000/docs (raw spec at `/docs/docs.json`)
 - Health: http://localhost:3000/v1/health
 
 > TigerBeetle uses io_uring and locks memory, so its container runs with `seccomp=unconfined`, `IPC_LOCK` and an unlimited memlock ulimit (see `docker-compose.yml`). On Docker Desktop, give the VM at least 4 GB of memory.

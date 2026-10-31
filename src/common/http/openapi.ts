@@ -1,10 +1,10 @@
 import { INestApplication } from '@nestjs/common';
-import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ADMIN_KEY_HEADER } from '../auth/admin-key.guard';
 
 export const DOCS_PATH = 'docs';
 
-export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
+export function setupOpenApi(app: INestApplication): void {
   const config = new DocumentBuilder()
     .setTitle('YAPA: YAPA Is Another Payment API')
     .setDescription(
@@ -22,11 +22,7 @@ export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
     .setVersion('1.0.0')
     .addApiKey({ type: 'apiKey', in: 'header', name: ADMIN_KEY_HEADER }, 'admin-key')
     .build();
-  return SwaggerModule.createDocument(app, config);
-}
-
-export function setupOpenApi(app: INestApplication): void {
-  SwaggerModule.setup(DOCS_PATH, app, () => buildOpenApiDocument(app), {
-    jsonDocumentUrl: `${DOCS_PATH}/openapi.json`,
+  SwaggerModule.setup(DOCS_PATH, app, () => SwaggerModule.createDocument(app, config), {
+    jsonDocumentUrl: `${DOCS_PATH}/docs.json`,
   });
 }

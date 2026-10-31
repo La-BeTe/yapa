@@ -3,4 +3,3 @@ coverage
 node_modules
 .yarn
 yarn.lock
-docs/openapi.json

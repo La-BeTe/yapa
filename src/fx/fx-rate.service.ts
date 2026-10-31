@@ -108,10 +108,12 @@ export class FxRateService {
     }
   }
 
-  /** Fetches live rates now, bypassing the cache, and syncs them into fx_rates. */
+  /**
+   * Fetches live rates now, bypassing the cache, and syncs them into fx_rates. The rows are
+   * written before the cache, so a request that sees the new snapshot also finds its pair.
+   */
   async refresh(): Promise<LiveSnapshot> {
     const snapshot = await this.provider.fetch();
-    await this.cache.set(snapshot, this.config.get('FX_LIVE_TTL_SECONDS'));
     await this.store.syncFromLive(
       currencyPairs().map(([base, quote]) => ({
         base,
@@ -120,6 +122,7 @@ export class FxRateService {
       })),
       this.config.get('FX_DEFAULT_SPREAD_BPS'),
     );
+    await this.cache.set(snapshot, this.config.get('FX_LIVE_TTL_SECONDS'));
     return snapshot;
   }
 

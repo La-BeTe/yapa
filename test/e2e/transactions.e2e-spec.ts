@@ -184,8 +184,12 @@ describe('Transactions (e2e)', () => {
   });
 
   it('lists wallet history newest first with filters and pagination', async () => {
-    const page = await ctx.http.get(`/v1/wallets/${alice}/transactions`).expect(200);
-    const items = page.body.data.items as Array<{
+    const history = (query = '') =>
+      ctx.http.get(`/v1/transactions?wallet_id=${alice}${query}`).expect(200);
+
+    const page = await history();
+    expect(page.body.meta).toEqual({ next_cursor: null, limit: 20 });
+    const items = page.body.data as Array<{
       type: string;
       direction: string;
       created_at: string;
@@ -194,23 +198,34 @@ describe('Transactions (e2e)', () => {
     expect(items[1]!.direction).toBe('OUT');
     expect([...items].sort((a, b) => b.created_at.localeCompare(a.created_at))).toEqual(items);
 
-    const swaps = await ctx.http.get(`/v1/wallets/${alice}/transactions?type=SWAP`).expect(200);
-    expect(swaps.body.data.items).toHaveLength(1);
+    expect((await history('&type=SWAP')).body.data).toHaveLength(1);
+    expect((await history('&currency=cGHS')).body.data).toHaveLength(1);
 
-    const ghs = await ctx.http.get(`/v1/wallets/${alice}/transactions?currency=cGHS`).expect(200);
-    expect(ghs.body.data.items).toHaveLength(1);
+    const first = await history('&limit=3');
+    expect(first.body.data).toHaveLength(3);
+    expect(first.body.meta).toEqual({ next_cursor: first.body.data[2].id, limit: 3 });
+    const second = await history(`&limit=3&cursor=${first.body.meta.next_cursor}`);
+    expect(second.body.data).toHaveLength(1);
+    expect(second.body.meta.next_cursor).toBeNull();
+  });
 
-    const first = await ctx.http.get(`/v1/wallets/${alice}/transactions?limit=3`).expect(200);
-    expect(first.body.data.items).toHaveLength(3);
-    const second = await ctx.http
-      .get(`/v1/wallets/${alice}/transactions?limit=3&cursor=${first.body.data.next_cursor}`)
-      .expect(200);
-    expect(second.body.data.items).toHaveLength(1);
-    expect(second.body.data.next_cursor).toBeNull();
+  it('requires wallet_id to list transactions', async () => {
+    const res = await ctx.http.get('/v1/transactions').expect(400);
+    expect(res.body).toMatchObject({ status: 'error', data: { code: 'VALIDATION_ERROR' } });
+    await ctx.http.get('/v1/transactions?wallet_id=01JBUNKNOWN0000000000000000').expect(404);
+  });
+
+  it('returns source and destination without scale', async () => {
+    const res = await ctx.http.get(`/v1/transactions?wallet_id=${alice}&limit=1`).expect(200);
+    expect(Object.keys(res.body.data[0].source).sort()).toEqual([
+      'amount',
+      'currency',
+      'wallet_id',
+    ]);
   });
 
   it('reflects new transactions in cached history immediately', async () => {
-    await ctx.http.get(`/v1/wallets/${bob}/transactions`).expect(200);
+    await ctx.http.get(`/v1/transactions?wallet_id=${bob}`).expect(200);
     const res = await post({
       type: 'DEPOSIT',
       unique_reference: ref(),
@@ -218,7 +233,7 @@ describe('Transactions (e2e)', () => {
       currency: 'cXAF',
       amount: '50',
     }).expect(201);
-    const page = await ctx.http.get(`/v1/wallets/${bob}/transactions`).expect(200);
-    expect(page.body.data.items[0].id).toBe(res.body.data.id);
+    const page = await ctx.http.get(`/v1/transactions?wallet_id=${bob}`).expect(200);
+    expect(page.body.data[0].id).toBe(res.body.data.id);
   });
 });

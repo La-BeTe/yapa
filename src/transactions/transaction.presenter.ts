@@ -1,4 +1,3 @@
-import { CURRENCIES } from '../common/money/currency';
 import type { TransactionRecord } from './transaction.types';
 
 export type Direction = 'IN' | 'OUT' | 'SELF';
@@ -9,8 +8,8 @@ export function presentTransaction(tx: TransactionRecord) {
     type: tx.type,
     status: tx.status,
     unique_reference: tx.unique_reference,
-    source: { ...tx.source, scale: CURRENCIES[tx.source.currency].scale },
-    destination: { ...tx.destination, scale: CURRENCIES[tx.destination.currency].scale },
+    source: tx.source,
+    destination: tx.destination,
     fx: tx.fx,
     failure: tx.failure,
     created_at: new Date(tx.created_at).toISOString(),

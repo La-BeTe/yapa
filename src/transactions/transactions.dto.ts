@@ -74,6 +74,11 @@ export class CreateTransactionDto {
 }
 
 export class ListTransactionsQuery {
+  @ApiProperty({ description: 'Wallet whose transactions to list (sent and received)' })
+  @IsString()
+  @MinLength(1)
+  wallet_id!: string;
+
   @ApiPropertyOptional({ enum: TRANSACTION_TYPES })
   @IsOptional()
   @IsIn(TRANSACTION_TYPES)

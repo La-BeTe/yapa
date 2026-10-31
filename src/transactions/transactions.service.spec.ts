@@ -55,8 +55,8 @@ describe('TransactionsService', () => {
         data: {
           type: 'DEPOSIT',
           status: 'COMPLETED',
-          source: { wallet_id: null, amount: '500000', currency: 'cNGN', scale: 2 },
-          destination: { wallet_id: alice, amount: '500000', currency: 'cNGN', scale: 2 },
+          source: { wallet_id: null, amount: '500000', currency: 'cNGN' },
+          destination: { wallet_id: alice, amount: '500000', currency: 'cNGN' },
           fx: null,
           failure: null,
         },
@@ -247,8 +247,8 @@ describe('TransactionsService', () => {
       });
       // 1,000 XAF at 2.5 = 2,500.00 NGN -> 250000; fee 1250; net 248750.
       expect((res.body as Body).data).toMatchObject({
-        destination: { amount: '248750', currency: 'cNGN', scale: 2 },
-        source: { scale: 0 },
+        destination: { amount: '248750', currency: 'cNGN' },
+        source: { amount: '1000', currency: 'cXAF' },
       });
     });
 

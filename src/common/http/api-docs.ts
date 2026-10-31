@@ -2,9 +2,14 @@ import { applyDecorators } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import { failure, success } from './envelope';
 
-/** Documents a success envelope with an example payload. */
-export const ApiSuccess = (status: number, message: string, data: unknown) =>
-  ApiResponse({ status, description: message, schema: { example: success(message, data) } });
+/** Documents a success envelope with an example payload (and `meta`, when the route has it). */
+export const ApiSuccess = (
+  status: number,
+  message: string,
+  data: unknown,
+  meta?: Record<string, unknown>,
+) =>
+  ApiResponse({ status, description: message, schema: { example: success(message, data, meta) } });
 
 /** Documents an error envelope for each listed code. */
 export const ApiErrors = (...errors: Array<[status: number, code: string, message: string]>) =>
@@ -49,8 +54,8 @@ export const examples = {
     type: 'TRANSFER',
     status: 'COMPLETED',
     unique_reference: 'order-7f3a9c',
-    source: { wallet_id: WALLET_ID, amount: '400', currency: 'USDx', scale: 2 },
-    destination: { wallet_id: OTHER_WALLET_ID, amount: '4975', currency: 'cGHS', scale: 2 },
+    source: { wallet_id: WALLET_ID, amount: '400', currency: 'USDx' },
+    destination: { wallet_id: OTHER_WALLET_ID, amount: '4975', currency: 'cGHS' },
     fx: {
       mid_rate: '12.5',
       effective_rate: '12.4375',

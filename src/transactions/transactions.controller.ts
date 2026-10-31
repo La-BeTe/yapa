@@ -1,18 +1,22 @@
-import { Body, Controller, Get, Param, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req, Res } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { ApiErrors, ApiSuccess, examples } from '../common/http/api-docs';
 import type { Envelope } from '../common/http/envelope';
-import { RawEnvelope } from '../common/http/response-envelope.interceptor';
+import { RawEnvelope, WithMeta } from '../common/http/response-envelope.interceptor';
 import { ResponseMessage } from '../common/http/response-message.decorator';
 import { presentTransaction } from './transaction.presenter';
-import { CreateTransactionDto } from './transactions.dto';
+import { TransactionHistoryService } from './transaction-history.service';
+import { CreateTransactionDto, ListTransactionsQuery } from './transactions.dto';
 import { TransactionsService } from './transactions.service';
 
 @ApiTags('transactions')
 @Controller('transactions')
 export class TransactionsController {
-  constructor(private readonly transactions: TransactionsService) {}
+  constructor(
+    private readonly transactions: TransactionsService,
+    private readonly history: TransactionHistoryService,
+  ) {}
 
   @Post()
   @ApiOperation({
@@ -48,6 +52,26 @@ export class TransactionsController {
     const { http_status, body } = await this.transactions.create(dto, req.requestId);
     res.status(http_status);
     return new RawEnvelope(body as Envelope<unknown>);
+  }
+
+  @Get()
+  @ApiOperation({
+    summary: "List a wallet's transactions, newest first",
+    description:
+      'Includes deposits, swaps and transfers sent and received. Filter by type and by currency (either side). Pass meta.next_cursor as cursor to get the next page.',
+  })
+  @ApiSuccess(200, 'Transactions retrieved', [{ ...examples.transaction, direction: 'OUT' }], {
+    next_cursor: null,
+    limit: 20,
+  })
+  @ApiErrors(
+    [400, 'VALIDATION_ERROR', 'wallet_id must be a string'],
+    [404, 'WALLET_NOT_FOUND', 'Wallet 01J... was not found'],
+  )
+  @ResponseMessage('Transactions retrieved')
+  async list(@Query() query: ListTransactionsQuery) {
+    const { items, next_cursor, limit } = await this.history.list(query.wallet_id, query);
+    return new WithMeta(items, { next_cursor, limit });
   }
 
   @Get(':id')

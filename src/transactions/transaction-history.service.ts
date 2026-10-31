@@ -16,6 +16,8 @@ import type { ListTransactionsQuery } from './transactions.dto';
 
 const DEFAULT_LIMIT = 20;
 
+export type HistoryFilters = Omit<ListTransactionsQuery, 'wallet_id'>;
+
 export interface TransactionPage {
   items: Array<ReturnType<typeof presentTransaction> & { direction: string }>;
   next_cursor: string | null;
@@ -34,7 +36,7 @@ export class TransactionHistoryService implements TransactionFinalizedHook {
     private readonly config: AppConfigService,
   ) {}
 
-  async list(walletId: string, query: ListTransactionsQuery): Promise<TransactionPage> {
+  async list(walletId: string, query: HistoryFilters): Promise<TransactionPage> {
     if (query.cursor !== undefined && !isUlid(query.cursor)) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'cursor is invalid', HttpStatus.BAD_REQUEST);
     }
@@ -74,7 +76,7 @@ export class TransactionHistoryService implements TransactionFinalizedHook {
     await this.cache.bump(walletIds);
   }
 
-  private async cacheKey(walletId: string, query: ListTransactionsQuery): Promise<string | null> {
+  private async cacheKey(walletId: string, query: HistoryFilters): Promise<string | null> {
     try {
       const version = await this.cache.version(walletId);
       const fingerprint = createHash('sha1')

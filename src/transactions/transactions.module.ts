@@ -10,7 +10,6 @@ import { TransactionsController } from './transactions.controller';
 import { TransactionHistoryService } from './transaction-history.service';
 import { RedisTransactionListCache, TRANSACTION_LIST_CACHE } from './transaction-list.cache';
 import { TransactionsService } from './transactions.service';
-import { WalletTransactionsController } from './wallet-transactions.controller';
 
 @Module({
   imports: [
@@ -18,7 +17,7 @@ import { WalletTransactionsController } from './wallet-transactions.controller';
     WalletsModule,
     MongooseModule.forFeature([{ name: Transaction.name, schema: TransactionSchema }]),
   ],
-  controllers: [TransactionsController, WalletTransactionsController],
+  controllers: [TransactionsController],
   providers: [
     TransactionsService,
     TransactionExecutor,
